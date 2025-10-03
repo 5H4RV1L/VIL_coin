@@ -15,7 +15,6 @@ from datetime import datetime
 from typing import Dict, List, Optional, Set
 import getpass
 
-# Color codes for CLI
 class Colors:
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
@@ -40,7 +39,7 @@ class Transaction:
         self.receiver = receiver
         self.amount = amount
         self.timestamp = timestamp or time.time()
-        self.tx_type = tx_type  # "transfer" or "mining_reward"
+        self.tx_type = tx_type
         self.hash = self.calculate_hash()
     
     def calculate_hash(self) -> str:
@@ -109,12 +108,12 @@ class User:
 class Blockchain:
     def __init__(self):
         self.chain = [self.create_genesis_block()]
-        self.difficulty = 5  # Increased difficulty
+        self.difficulty = 5
         self.pending_transactions = []
-        self.mining_reward = 2  # Reduced mining reward
+        self.mining_reward = 2 
         self.users = {}
-        self.username_to_id = {}  # Map username to user_id
-        self.id_to_username = {}  # Map user_id to username
+        self.username_to_id = {} 
+        self.id_to_username = {} 
         self.current_user = None
         self.peers = set()
         self.server_port = 8888
@@ -125,7 +124,6 @@ class Blockchain:
         
         self.load_data()
 
-        # Validate local chain on startup
         if not self.is_chain_valid():
             colored_print("⚠️  Local chain validation failed on startup!", Colors.FAIL)
             threading.Thread(target=self.delayed_recovery, daemon=True).start()
@@ -151,11 +149,9 @@ class Blockchain:
         ranges = []
         
         if ip.is_private:
-            # Add /24 subnet
             network_24 = ipaddress.ip_network(f"{self.my_ip}/24", strict=False)
             ranges.append(str(network_24))
             
-            # Add /16 subnet for broader discovery (sample it)
             try:
                 network_16 = ipaddress.ip_network(f"{self.my_ip}/16", strict=False)
                 ranges.append(str(network_16))
@@ -180,7 +176,7 @@ class Blockchain:
             
             try:
                 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                sock.settimeout(0.5)  # Faster timeout for broader scanning
+                sock.settimeout(0.5) 
                 result = sock.connect_ex((ip_str, self.server_port))
                 if result == 0:
                     message = {"type": "ping", "data": "discovery"}
@@ -200,11 +196,10 @@ class Blockchain:
             network = ipaddress.ip_network(network_range)
             hosts = list(network.hosts())
             
-            # For /16 networks, sample random IPs instead of scanning all
             if network.prefixlen == 16:
                 hosts = random.sample(hosts, min(200, len(hosts)))
             elif network.prefixlen == 24:
-                hosts = hosts[:254]  # Scan all /24 hosts
+                hosts = hosts[:254] 
             
             total_ips_to_scan += len(hosts)
             
@@ -213,13 +208,11 @@ class Blockchain:
                 threads.append(thread)
                 thread.start()
                 
-                # Limit concurrent threads
                 if len(threads) >= 100:
                     for t in threads:
                         t.join()
                     threads = []
         
-        # Join remaining threads
         for thread in threads:
             thread.join()
         
@@ -278,13 +271,11 @@ class Blockchain:
     def sync_blockchain_data(self):
         """Sync blockchain data and implement consensus"""
         colored_print("⛓️  Syncing blockchain data...", Colors.OKBLUE)
-        
-        # Check if local chain is valid first
+
         if not self.is_valid_chain(self.chain):
             colored_print("⚠️  Local chain is invalid! Attempting recovery...", Colors.WARNING)
             if self.recover_from_invalid_chain():
-                return  # Recovery successful, chain replaced
-            # If recovery failed, continue with empty/genesis chain
+                return 
         
         valid_chains = [(len(self.chain), self.chain, "local")]
         
@@ -408,7 +399,6 @@ class Blockchain:
                 self.peers.discard(peer_ip)
 
         if valid_chains:
-            # Sort by length and adopt the longest valid chain
             valid_chains.sort(key=lambda x: x[0], reverse=True)
             longest_chain_length, longest_chain, source = valid_chains[0]
 
@@ -428,7 +418,7 @@ class Blockchain:
         
     def delayed_recovery(self):
         """Delay recovery to allow network initialization"""
-        time.sleep(3)  # Wait for network to initialize
+        time.sleep(3) 
         self.recover_from_invalid_chain()
     
     def send_message_with_response(self, peer_ip: str, message: dict, timeout: int = 10) -> dict:
@@ -438,20 +428,17 @@ class Blockchain:
             sock.settimeout(timeout)
             sock.connect((peer_ip, self.server_port))
             sock.send(json.dumps(message).encode())
-
-            # Receive data in chunks until complete
             response_data = b""
             while True:
-                chunk = sock.recv(65536)  # Larger buffer: 64KB chunks
+                chunk = sock.recv(65536)
                 if not chunk:
                     break
                 response_data += chunk
-                # Check if we have a complete JSON (simple heuristic)
                 try:
                     json.loads(response_data.decode())
-                    break  # Complete JSON received
+                    break 
                 except json.JSONDecodeError:
-                    continue  # Keep receiving
+                    continue  
                 
             sock.close()
 
@@ -499,7 +486,6 @@ class Blockchain:
         if not user_id:
             return balance
         
-        # Calculate balance from blockchain transactions
         for block in self.chain:
             for transaction in block.transactions:
                 if transaction.sender == user_id:
@@ -534,13 +520,11 @@ class Blockchain:
         valid_transactions = []
         current_balances = {}
         
-        # Initialize balances
         for username in self.users:
             current_balances[self.username_to_id[username]] = self.get_balance(username)
         
         sorted_transactions = sorted(self.pending_transactions, key=lambda tx: tx.timestamp)
-        
-        # Validate transactions
+
         for tx in sorted_transactions:
             sender_username = self.id_to_username.get(tx.sender)
             receiver_username = self.id_to_username.get(tx.receiver)
@@ -560,7 +544,6 @@ class Blockchain:
             colored_print("❌ No valid transactions to mine!", Colors.FAIL)
             return False
         
-        # Add mining reward transaction
         miner_id = self.username_to_id[miner]
         reward_tx = Transaction("SYSTEM", miner_id, self.mining_reward, tx_type="mining_reward")
         valid_transactions.append(reward_tx)
@@ -580,8 +563,7 @@ class Blockchain:
         end_time = time.time()
         
         self.chain.append(block)
-        
-        # Remove mined transactions from pending
+
         mined_hashes = {tx.hash for tx in valid_transactions if tx.tx_type != "mining_reward"}
         self.pending_transactions = [
             tx for tx in self.pending_transactions 
@@ -647,8 +629,7 @@ class Blockchain:
                     block.hash = block_data['hash']
                     block.timestamp = block_data['timestamp']
                     self.chain.append(block)
-                
-                # Load users
+
                 for username, user_data in data.get('users', {}).items():
                     user = User(username, "") 
                     user.user_id = user_data.get('user_id', generate_user_id())
@@ -657,8 +638,7 @@ class Blockchain:
                     self.users[username] = user
                     self.username_to_id[username] = user.user_id
                     self.id_to_username[user.user_id] = username
-                
-                # Load pending transactions
+
                 self.pending_transactions = []
                 for tx_data in data.get('pending_transactions', []):
                     tx = Transaction(
@@ -680,7 +660,7 @@ class Blockchain:
                 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                 server_socket.bind(('', self.server_port))
-                server_socket.listen(10)  # Increased backlog for better reliability
+                server_socket.listen(10) 
                 colored_print(f"🌐 Network server listening on port {self.server_port}", Colors.OKGREEN)
                 
                 while True:
@@ -693,23 +673,22 @@ class Blockchain:
     
     def handle_peer(self, client_socket, addr):
         try:
-            # Receive data in chunks for large messages
+
             data_bytes = b""
             client_socket.settimeout(5)
             while True:
                 try:
-                    chunk = client_socket.recv(65536)  # 64KB chunks
+                    chunk = client_socket.recv(65536)
                     if not chunk:
                         break
                     data_bytes += chunk
-                    # Try to parse as complete JSON
                     try:
                         json.loads(data_bytes.decode())
-                        break  # Complete JSON received
+                        break 
                     except json.JSONDecodeError:
-                        continue  # Keep receiving
+                        continue  
                 except socket.timeout:
-                    break  # No more data
+                    break  
                 
             data = data_bytes.decode()
             if not data:
@@ -1010,7 +989,6 @@ class BlockchainCLI:
         colored_print(f"✅ Chain valid: {self.blockchain.is_chain_valid()}", Colors.OKGREEN if self.blockchain.is_chain_valid() else Colors.FAIL)
         print("-" * 80)
         
-        # Show last 10 blocks
         recent_blocks = self.blockchain.chain[-10:]
         
         for block in recent_blocks:
@@ -1219,4 +1197,5 @@ class BlockchainCLI:
 
 if __name__ == "__main__":
     cli = BlockchainCLI()
+
     cli.run()
