@@ -56,3 +56,64 @@ It includes both a **command-line interface (CLI)** and a **modern GUI** built w
 - On Linux, make sure `tkinter` is installed:
   ```bash
   sudo apt install python3-tk
+
+## ⚙️ How to Run
+
+There are two ways to use VIL Coin — GUI and CLI.
+
+### 🖥️ GUI Version (Recommended for most users)
+
+If you want the full graphical interface:
+
+#### Windows
+
+- Simply double-click:
+
+- run.bat
+
+- Or run manually:
+  python VILcoin_gui.py
+ 
+#### Linux / macOS
+- python3 VILcoin_gui.py
+
+### 💻 CLI Version (Command-Line Interface)
+
+If you prefer terminal-based interaction:
+
+#### Windows
+- python VILcoin.py
+
+#### Linux / macOS
+- python3 VILcoin.py
+
+
+### Once running, you can:
+
+- Create a new account
+
+- Log in to send or receive VIL Coins
+
+- Mine new blocks for rewards
+
+- View your balance, users, and network peers
+
+- Automatically sync with other nodes on your LAN
+
+## 🛡️ Security Notes
+
+- Passwords are hashed using SHA-256 (never stored in plain text)
+
+- Peer communication is local-only — no external servers involved
+
+- This project is for educational and experimental use only
+ (not a real cryptocurrency)
+
+## 👤 Author
+
+- Sharvil Sagalgile
+- GitHub: @5H4RV1L
+
+## 📜 License
+
+Released under the MIT License — free to use, modify, and share.
