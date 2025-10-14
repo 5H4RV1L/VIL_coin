@@ -41,3 +41,18 @@ It includes both a **command-line interface (CLI)** and a **modern GUI** built w
 ├── VILcoin_gui.py # GUI frontend built with tkinter<br>
 ├── run.bat # Windows launcher for GUI<br>
 └── blockchain_data.json # Pre-included local blockchain data and user info<br>
+
+> The `blockchain_data.json` file contains:
+> - Saved blockchain blocks  
+> - User accounts and balances  
+> - Any pending transactions  
+
+---
+
+## 🧰 Requirements
+
+- **Python 3.8+**
+- No external libraries needed — only standard Python modules
+- On Linux, make sure `tkinter` is installed:
+  ```bash
+  sudo apt install python3-tk
