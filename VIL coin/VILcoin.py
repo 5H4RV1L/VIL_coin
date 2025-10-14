@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 import hashlib
 import json
 import time
@@ -108,12 +106,12 @@ class User:
 class Blockchain:
     def __init__(self):
         self.chain = [self.create_genesis_block()]
-        self.difficulty = 5
+        self.difficulty = 5 
         self.pending_transactions = []
-        self.mining_reward = 2 
+        self.mining_reward = 2
         self.users = {}
-        self.username_to_id = {} 
-        self.id_to_username = {} 
+        self.username_to_id = {}  
+        self.id_to_username = {}  
         self.current_user = None
         self.peers = set()
         self.server_port = 8888
@@ -133,7 +131,6 @@ class Blockchain:
         threading.Thread(target=self.auto_discover_and_sync, daemon=True).start()
     
     def get_local_ip(self) -> str:
-        """Get local IP address"""
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             s.connect(("8.8.8.8", 80))
@@ -144,7 +141,6 @@ class Blockchain:
             return "127.0.0.1"
     
     def get_network_ranges(self) -> List[str]:
-        """Get multiple network ranges for comprehensive scanning"""
         ip = ipaddress.ip_address(self.my_ip)
         ranges = []
         
@@ -161,7 +157,6 @@ class Blockchain:
         return ranges
     
     def scan_for_peers(self) -> Set[str]:
-        """Enhanced peer discovery with broader scanning"""
         peers = set()
         network_ranges = self.get_network_ranges()
         
@@ -176,7 +171,7 @@ class Blockchain:
             
             try:
                 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                sock.settimeout(0.5) 
+                sock.settimeout(0.5)  
                 result = sock.connect_ex((ip_str, self.server_port))
                 if result == 0:
                     message = {"type": "ping", "data": "discovery"}
@@ -220,7 +215,6 @@ class Blockchain:
         return peers
     
     def auto_discover_and_sync(self):
-        """Auto-discover peers and perform initial sync"""
         time.sleep(2)
         
         discovered_peers = self.scan_for_peers()
@@ -269,9 +263,8 @@ class Blockchain:
                 self.peers.discard(peer_ip)
     
     def sync_blockchain_data(self):
-        """Sync blockchain data and implement consensus"""
         colored_print("⛓️  Syncing blockchain data...", Colors.OKBLUE)
-
+        
         if not self.is_valid_chain(self.chain):
             colored_print("⚠️  Local chain is invalid! Attempting recovery...", Colors.WARNING)
             if self.recover_from_invalid_chain():
@@ -312,7 +305,6 @@ class Blockchain:
                 colored_print(f"✅ Local chain is already the longest (length: {len(self.chain)})", Colors.OKGREEN)
 
     def deserialize_chain(self, chain_data: List[dict]) -> List[Block]:
-        """Convert chain data back to Block objects"""
         try:
             chain = []
             for block_data in chain_data:
@@ -344,7 +336,6 @@ class Blockchain:
             return None
     
     def is_valid_chain(self, chain: List[Block]) -> bool:
-        """Validate a blockchain"""
         if not chain or len(chain) == 0:
             return False
         
@@ -367,7 +358,6 @@ class Blockchain:
         return True
     
     def recover_from_invalid_chain(self):
-        """Recover from an invalid local chain by adopting the longest valid chain from network"""
         colored_print("⚠️  WARNING: Local chain is invalid!", Colors.FAIL)
         colored_print("🔍 Searching network for valid chains to recover...", Colors.WARNING)
 
@@ -417,26 +407,25 @@ class Blockchain:
             return False
         
     def delayed_recovery(self):
-        """Delay recovery to allow network initialization"""
         time.sleep(3) 
         self.recover_from_invalid_chain()
     
     def send_message_with_response(self, peer_ip: str, message: dict, timeout: int = 10) -> dict:
-        """Send message to peer and wait for response"""
         try:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.settimeout(timeout)
             sock.connect((peer_ip, self.server_port))
             sock.send(json.dumps(message).encode())
+
             response_data = b""
             while True:
-                chunk = sock.recv(65536)
+                chunk = sock.recv(65536)  
                 if not chunk:
                     break
                 response_data += chunk
                 try:
                     json.loads(response_data.decode())
-                    break 
+                    break  
                 except json.JSONDecodeError:
                     continue  
                 
@@ -524,7 +513,7 @@ class Blockchain:
             current_balances[self.username_to_id[username]] = self.get_balance(username)
         
         sorted_transactions = sorted(self.pending_transactions, key=lambda tx: tx.timestamp)
-
+        
         for tx in sorted_transactions:
             sender_username = self.id_to_username.get(tx.sender)
             receiver_username = self.id_to_username.get(tx.receiver)
@@ -563,7 +552,7 @@ class Blockchain:
         end_time = time.time()
         
         self.chain.append(block)
-
+        
         mined_hashes = {tx.hash for tx in valid_transactions if tx.tx_type != "mining_reward"}
         self.pending_transactions = [
             tx for tx in self.pending_transactions 
@@ -581,7 +570,6 @@ class Blockchain:
         return True
     
     def search_block_by_number(self, block_number: int) -> Optional[Block]:
-        """Search for a block by its number"""
         if 0 <= block_number < len(self.chain):
             return self.chain[block_number]
         return None
@@ -629,7 +617,7 @@ class Blockchain:
                     block.hash = block_data['hash']
                     block.timestamp = block_data['timestamp']
                     self.chain.append(block)
-
+                
                 for username, user_data in data.get('users', {}).items():
                     user = User(username, "") 
                     user.user_id = user_data.get('user_id', generate_user_id())
@@ -638,7 +626,7 @@ class Blockchain:
                     self.users[username] = user
                     self.username_to_id[username] = user.user_id
                     self.id_to_username[user.user_id] = username
-
+                
                 self.pending_transactions = []
                 for tx_data in data.get('pending_transactions', []):
                     tx = Transaction(
@@ -660,7 +648,7 @@ class Blockchain:
                 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                 server_socket.bind(('', self.server_port))
-                server_socket.listen(10) 
+                server_socket.listen(10)  
                 colored_print(f"🌐 Network server listening on port {self.server_port}", Colors.OKGREEN)
                 
                 while True:
@@ -673,7 +661,6 @@ class Blockchain:
     
     def handle_peer(self, client_socket, addr):
         try:
-
             data_bytes = b""
             client_socket.settimeout(5)
             while True:
@@ -684,7 +671,7 @@ class Blockchain:
                     data_bytes += chunk
                     try:
                         json.loads(data_bytes.decode())
-                        break 
+                        break  
                     except json.JSONDecodeError:
                         continue  
                 except socket.timeout:
@@ -1197,5 +1184,4 @@ class BlockchainCLI:
 
 if __name__ == "__main__":
     cli = BlockchainCLI()
-
     cli.run()
