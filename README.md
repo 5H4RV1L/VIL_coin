@@ -36,4 +36,8 @@ It includes both a **command-line interface (CLI)** and a **modern GUI** built w
 
 ## 🧩 Project Structure
 
-
+📂 VILcoin/
+├── VILcoin.py # Core blockchain engine + CLI version
+├── VILcoin_gui.py # GUI frontend built with tkinter
+├── run.bat # Windows launcher for GUI
+└── blockchain_data.json # (auto-generated on first run)
