@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 import tkinter as tk
 from tkinter import ttk, messagebox, scrolledtext
 import threading
@@ -10,7 +8,7 @@ import sys
 import queue
 import os
 
-if os.name == 'nt':  # Windows
+if os.name == 'nt': 
     import ctypes
     ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0)
 
@@ -20,9 +18,8 @@ class ConsoleRedirector:
         self.queue = queue.Queue()
         
     def write(self, message):
-        if message.strip():  # Only add non-empty messages
+        if message.strip(): 
             self.console_callback(message.strip())
-        # Also write to original stdout so it still appears in CMD
         sys.__stdout__.write(message)
     
     def flush(self):
@@ -37,7 +34,6 @@ class VILCoinGUI:
         
         self.console_buffer = []
         
-        # Color scheme
         self.colors = {
             'bg_dark': '#0f0f23',
             'bg_medium': '#1a1a2e',
@@ -54,31 +50,24 @@ class VILCoinGUI:
         sys.stdout = ConsoleRedirector(self.buffer_console_message)
         sys.stderr = ConsoleRedirector(self.buffer_console_message)
         
-        # Initialize blockchain in separate thread to avoid blocking GUI
         self.blockchain = None
         self.init_blockchain()
         
-        # Create main container with gradient effect
         self.main_container = tk.Frame(root, bg=self.colors['bg_dark'])
         self.main_container.pack(fill=tk.BOTH, expand=True)
         
         self.root.after(100, self.setup_fullscreen)
         
-        # Configure style
         self.setup_styles()
         
-        # Show login screen initially
         self.show_login_screen()
         
     def buffer_console_message(self, message):
-        """Buffer console messages and display them if console exists"""
         self.console_buffer.append(message)
 
-        # Keep only last 100 messages
         if len(self.console_buffer) > 100:
             self.console_buffer.pop(0)
 
-        # Display immediately if console widget exists
         if hasattr(self, 'console_text'):
             try:
                 self.display_console_message(message)
@@ -86,7 +75,6 @@ class VILCoinGUI:
                 pass
 
     def display_console_message(self, message):
-        """Display a single message in the console widget"""
         self.console_text.config(state=tk.NORMAL)
         timestamp = datetime.now().strftime("%H:%M:%S")
         self.console_text.insert(tk.END, f"[{timestamp}] {message}\n")
@@ -94,26 +82,20 @@ class VILCoinGUI:
         self.console_text.config(state=tk.DISABLED)
 
     def add_console_message(self, message):
-        """Add a timestamped message to the console"""
-        print(message)  # This will go through the redirector
+        print(message)  
 
     def setup_fullscreen(self):
-        """Setup fullscreen after a small delay"""
         try:
-            # Try Windows method
             self.root.attributes('-fullscreen', True)
         except:
             try:
                 self.root.state('zoomed')
             except:
                 try:
-                    # Try Linux method
                     self.root.attributes('-zoomed', True)
                 except:
-                    # Fallback to maximized geometry
                     self.root.geometry(f"{self.root.winfo_screenwidth()}x{self.root.winfo_screenheight()}+0+0")
         
-        # Allow exit fullscreen with Escape
         self.root.bind('<Escape>', lambda e: self.toggle_fullscreen())
         self.root.bind('<F11>', lambda e: self.toggle_fullscreen())
     
@@ -129,11 +111,9 @@ class VILCoinGUI:
         style = ttk.Style()
         style.theme_use('clam')
         
-        # Frame styles
         style.configure('TFrame', background=self.colors['bg_dark'])
         style.configure('Card.TFrame', background=self.colors['bg_medium'], relief='flat')
         
-        # Label styles
         style.configure('TLabel', 
             background=self.colors['bg_dark'], 
             foreground=self.colors['text'], 
@@ -151,14 +131,12 @@ class VILCoinGUI:
             font=('Segoe UI', 32, 'bold'),
             foreground=self.colors['success'])
         
-        # Entry styles
         style.configure('TEntry',
             fieldbackground=self.colors['bg_light'],
             foreground=self.colors['text'],
             borderwidth=0,
             relief='flat')
         
-        # Button styles
         style.configure('TButton', 
             font=('Segoe UI', 10, 'bold'),
             borderwidth=0,
@@ -185,12 +163,10 @@ class VILCoinGUI:
             foreground='#ffffff')
     
     def create_card(self, parent, **kwargs):
-        """Create a card-style frame with rounded appearance"""
         card = tk.Frame(parent, bg=self.colors['bg_medium'], **kwargs)
         return card
     
     def create_gradient_label(self, parent, text, font_size=28):
-        """Create an attractive title label"""
         label = tk.Label(parent, 
             text=text,
             bg=self.colors['bg_dark'],
@@ -212,7 +188,6 @@ class VILCoinGUI:
     def show_login_screen(self):
         self.clear_container()
 
-        # Close button in top right corner
         close_btn = tk.Button(self.main_container,
             text="✕",
             bg=self.colors['error'],
@@ -225,11 +200,9 @@ class VILCoinGUI:
             pady=5)
         close_btn.place(relx=1.0, rely=0.0, anchor='ne', x=-20, y=20)
         
-        # Center frame
         center_frame = tk.Frame(self.main_container, bg=self.colors['bg_dark'])
         center_frame.place(relx=0.5, rely=0.5, anchor='center')
         
-        # Animated title with emoji
         title = self.create_gradient_label(center_frame, "🪙 VIL COIN", 36)
         title.pack(pady=(0, 5))
         
@@ -240,7 +213,6 @@ class VILCoinGUI:
             font=('Segoe UI', 11))
         subtitle.pack(pady=(0, 30))
         
-        # Network info badge
         if self.blockchain:
             info_card = self.create_card(center_frame)
             info_card.pack(pady=(0, 30), padx=40)
@@ -260,11 +232,9 @@ class VILCoinGUI:
                 font=('Courier', 9))
             info_label.pack(pady=(0, 5), padx=20)
         
-        # Login card
         login_card = self.create_card(center_frame)
         login_card.pack(pady=10, padx=40, fill=tk.BOTH)
         
-        # Card header
         header_frame = tk.Frame(login_card, bg=self.colors['bg_medium'])
         header_frame.pack(fill=tk.X, pady=(20, 10))
         
@@ -274,11 +244,9 @@ class VILCoinGUI:
             fg=self.colors['text'],
             font=('Segoe UI', 16, 'bold')).pack()
         
-        # Form fields
         form_frame = tk.Frame(login_card, bg=self.colors['bg_medium'])
         form_frame.pack(pady=20, padx=40)
         
-        # Username
         tk.Label(form_frame, text="Username",
             bg=self.colors['bg_medium'],
             fg=self.colors['text_dim'],
@@ -295,7 +263,6 @@ class VILCoinGUI:
             insertbackground=self.colors['accent'])
         self.login_username.pack(pady=12, padx=15, fill=tk.X)
         
-        # Password
         tk.Label(form_frame,
             text="Password",
             bg=self.colors['bg_medium'],
@@ -316,7 +283,6 @@ class VILCoinGUI:
         
         form_frame.columnconfigure(0, minsize=300)
         
-        # Buttons
         btn_frame = tk.Frame(login_card, bg=self.colors['bg_medium'])
         btn_frame.pack(pady=(0, 25), padx=40, fill=tk.X)
         
@@ -355,11 +321,9 @@ class VILCoinGUI:
     def show_create_account(self):
         self.clear_container()
         
-        # Center frame
         center_frame = tk.Frame(self.main_container, bg=self.colors['bg_dark'])
         center_frame.place(relx=0.5, rely=0.5, anchor='center')
         
-        # Title
         title = self.create_gradient_label(center_frame, "Create Account", 28)
         title.pack(pady=(0, 5))
         
@@ -370,14 +334,12 @@ class VILCoinGUI:
             font=('Segoe UI', 11))
         subtitle.pack(pady=(0, 30))
         
-        # Form card
         form_card = self.create_card(center_frame)
         form_card.pack(pady=10, padx=40)
         
         form_frame = tk.Frame(form_card, bg=self.colors['bg_medium'])
         form_frame.pack(pady=30, padx=40)
         
-        # Username
         tk.Label(form_frame,
             text="Choose Username",
             bg=self.colors['bg_medium'],
@@ -395,7 +357,6 @@ class VILCoinGUI:
             insertbackground=self.colors['accent'])
         self.new_username.pack(pady=12, padx=15, fill=tk.X)
         
-        # Password
         tk.Label(form_frame,
             text="Create Password",
             bg=self.colors['bg_medium'],
@@ -414,7 +375,6 @@ class VILCoinGUI:
             insertbackground=self.colors['accent'])
         self.new_password.pack(pady=12, padx=15, fill=tk.X)
         
-        # Confirm Password
         tk.Label(form_frame,
             text="Confirm Password",
             bg=self.colors['bg_medium'],
@@ -435,7 +395,6 @@ class VILCoinGUI:
         
         form_frame.columnconfigure(0, minsize=320)
         
-        # Info box
         info_box = tk.Frame(form_card, bg=self.colors['bg_light'])
         info_box.pack(pady=(0, 20), padx=40, fill=tk.X)
         
@@ -446,7 +405,6 @@ class VILCoinGUI:
             font=('Segoe UI', 9),
             wraplength=300).pack(pady=10, padx=15)
         
-        # Buttons
         btn_frame = tk.Frame(form_card, bg=self.colors['bg_medium'])
         btn_frame.pack(pady=(0, 30), padx=40, fill=tk.X)
         
@@ -512,11 +470,9 @@ class VILCoinGUI:
     def show_main_dashboard(self):
         self.clear_container()
         
-        # Main dashboard container
         dashboard = tk.Frame(self.main_container, bg='#0f0f1e')
         dashboard.pack(fill=tk.BOTH, expand=True, padx=40, pady=30)
         
-        # Top bar
         top_bar = tk.Frame(dashboard, bg='#0f0f1e')
         top_bar.pack(fill=tk.X, pady=(0, 30))
         
@@ -530,25 +486,20 @@ class VILCoinGUI:
         
         ttk.Button(top_bar, text="Logout", command=self.logout).pack(side=tk.RIGHT)
         
-        # Balance card - prominent display
         balance_card = self.create_card(dashboard)
         balance_card.pack(fill=tk.X, pady=(0, 30))
 
-        # Left half - Balance display
         left_half = self.create_card(balance_card)
         left_half.pack(side=tk.LEFT, fill=tk.X, pady=(0, 30))
 
-        # Center the balance content in the left half
         balance_content = tk.Frame(left_half, bg='#1a1a2e')
         balance_content.pack(padx=(200), pady=35)
 
         ttk.Label(balance_content, text="Your Balance", style='CardInfo.TLabel').pack()
 
-        # Balance display with refresh button in a horizontal frame
         balance_display = tk.Frame(balance_content, bg='#1a1a2e')
         balance_display.pack(pady=(10, 0))
 
-        # Refresh button on the left
         refresh_btn = tk.Button(balance_display,
             text="🔄",
             bg=self.colors['bg_light'],
@@ -561,16 +512,13 @@ class VILCoinGUI:
             pady=5)
         refresh_btn.pack(side=tk.LEFT, padx=(0, 15))
 
-        # Balance on the right
         balance = self.blockchain.get_balance(self.blockchain.current_user)
         balance_text = f"{balance:.2f} VIL"
         ttk.Label(balance_display, text=balance_text, style='Balance.TLabel').pack(side=tk.LEFT)
         
-        # Right half - Empty for now (you can add content here)
         right_half = tk.Frame(balance_card, bg='#1a1a2e')
         right_half.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
         
-        # Console header
         console_header = tk.Frame(right_half, bg='#1a1a2e')
         console_header.pack(fill=tk.X, pady=(0, 10))
         
@@ -580,7 +528,6 @@ class VILCoinGUI:
             fg=self.colors['text_dim'],
             font=('Segoe UI', 10, 'bold')).pack(side=tk.LEFT)
         
-        # Console text area
         self.console_text = scrolledtext.ScrolledText(right_half,
             wrap=tk.WORD,
             width=50,
@@ -595,25 +542,20 @@ class VILCoinGUI:
             state=tk.DISABLED)
         self.console_text.pack(fill=tk.BOTH, expand=True)
         
-        # Add initial console messages
         self.add_console_message("System initialized")
         self.add_console_message(f"Node: {self.blockchain.my_ip}:{self.blockchain.server_port}")
         self.add_console_message(f"Blockchain height: {len(self.blockchain.chain)}")
         self.add_console_message(f"Peers: {len(self.blockchain.peers)}")
         self.add_console_message(f"Balance: {balance:.2f} VIL")
         
-        # After creating console_text widget, add:
         self.console_text.pack(fill=tk.BOTH, expand=True)
 
-        # Display buffered messages
-        for msg in self.console_buffer[-20:]:  # Show last 20 messages
+        for msg in self.console_buffer[-20:]:  
             self.display_console_message(msg)
         
-        # Action buttons grid
         actions_frame = tk.Frame(dashboard, bg='#0f0f1e')
         actions_frame.pack(fill=tk.BOTH, expand=True)
         
-        # Configure grid weights for responsiveness
         for i in range(4):
             actions_frame.columnconfigure(i, weight=1, uniform="action")
         for i in range(2):
@@ -670,7 +612,6 @@ class VILCoinGUI:
         dialog.geometry("450x600")
         dialog.configure(bg=self.colors['bg_dark'])
         
-        # Title
         title_frame = tk.Frame(dialog, bg=self.colors['bg_dark'])
         title_frame.pack(pady=20)
         
@@ -686,14 +627,12 @@ class VILCoinGUI:
             fg=self.colors['text'],
             font=('Segoe UI', 16, 'bold')).pack()
         
-        # Form card
         form_card = self.create_card(dialog)
         form_card.pack(pady=10, padx=30, fill=tk.BOTH, expand=True)
         
         form_frame = tk.Frame(form_card, bg=self.colors['bg_medium'])
         form_frame.pack(pady=20, padx=30, fill=tk.BOTH, expand=True)
         
-        # Receiver
         tk.Label(form_frame,
             text="Receiver Username",
             bg=self.colors['bg_medium'],
@@ -711,7 +650,6 @@ class VILCoinGUI:
             insertbackground=self.colors['accent'])
         receiver_entry.pack(pady=12, padx=15, fill=tk.X)
         
-        # Amount
         tk.Label(form_frame,
             text="Amount (VIL)",
             bg=self.colors['bg_medium'],
@@ -729,7 +667,6 @@ class VILCoinGUI:
             insertbackground=self.colors['accent'])
         amount_entry.pack(pady=12, padx=15, fill=tk.X)
         
-        # Balance info
         current_balance = self.blockchain.get_balance(self.blockchain.current_user)
         tk.Label(form_frame,
             text=f"Available: {current_balance:.2f} VIL",
@@ -837,7 +774,6 @@ class VILCoinGUI:
         dialog.geometry("800x600")
         dialog.configure(bg=self.colors['bg_dark'])
         
-        # Header
         header = tk.Frame(dialog, bg=self.colors['bg_medium'])
         header.pack(fill=tk.X, padx=20, pady=20)
         
@@ -847,7 +783,6 @@ class VILCoinGUI:
             fg=self.colors['accent'],
             font=('Segoe UI', 16, 'bold')).pack(side=tk.LEFT, padx=20, pady=15)
         
-        # Info badges
         info_frame = tk.Frame(header, bg=self.colors['bg_medium'])
         info_frame.pack(side=tk.RIGHT, padx=20, pady=10)
         
@@ -871,7 +806,6 @@ class VILCoinGUI:
             padx=10,
             pady=5).pack(side=tk.LEFT, padx=5)
         
-        # Blockchain content
         text_area = scrolledtext.ScrolledText(dialog,
             wrap=tk.WORD,
             width=90,
@@ -912,7 +846,6 @@ class VILCoinGUI:
         dialog.geometry("700x500")
         dialog.configure(bg=self.colors['bg_dark'])
         
-        # Header
         header = tk.Frame(dialog, bg=self.colors['bg_medium'])
         header.pack(fill=tk.X, padx=20, pady=20)
         
@@ -931,7 +864,6 @@ class VILCoinGUI:
             pady=5)
         count_label.pack(side=tk.RIGHT, padx=20)
         
-        # Content
         text_area = scrolledtext.ScrolledText(dialog,
             wrap=tk.WORD,
             width=80,
@@ -988,7 +920,6 @@ class VILCoinGUI:
             pady=5)
         count_label.pack(side=tk.RIGHT, padx=20)
         
-        # User list
         list_frame = tk.Frame(dialog, bg=self.colors['bg_dark'])
         list_frame.pack(padx=20, pady=(0, 20), fill=tk.BOTH, expand=True)
         
@@ -1007,7 +938,6 @@ class VILCoinGUI:
             card_content = tk.Frame(user_card, bg=self.colors['bg_medium'])
             card_content.pack(fill=tk.BOTH, padx=15, pady=12, expand=True)
             
-            # Left side - username and status
             left = tk.Frame(card_content, bg=self.colors['bg_medium'])
             left.pack(side=tk.LEFT, fill=tk.X, expand=True)
             
@@ -1026,23 +956,6 @@ class VILCoinGUI:
                 bg=self.colors['bg_medium'],
                 fg=status_color,
                 font=('Segoe UI', 8)).pack(anchor='e')
-            
-            ## Right side - balance
-            #right = tk.Frame(card_content, bg=self.colors['bg_medium'])
-            #right.pack(side=tk.RIGHT)
-            
-            #balance = self.blockchain.get_balance(username)
-            #tk.Label(right,
-            #    text=f"{balance:.2f} VIL",
-            #    bg=self.colors['bg_medium'],
-            #    fg=self.colors['success'],
-            #    font=('Segoe UI', 11, 'bold')).pack(anchor='e')
-            #
-            #tk.Label(right,
-            #    text=f"ID: {user.user_id[:8]}...",
-            #    bg=self.colors['bg_medium'],
-            #    fg=self.colors['text_dim'],
-            #    font=('Consolas', 8)).pack(anchor='e')
         
         canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
@@ -1053,7 +966,6 @@ class VILCoinGUI:
         dialog.geometry("500x450")
         dialog.configure(bg=self.colors['bg_dark'])
         
-        # Header
         header = tk.Frame(dialog, bg=self.colors['bg_medium'])
         header.pack(fill=tk.X, padx=20, pady=20)
         
@@ -1064,7 +976,6 @@ class VILCoinGUI:
             font=('Segoe UI', 16, 'bold')).pack(padx=20, pady=15)
         
         if self.blockchain:
-            # Node info card
             node_card = self.create_card(dialog)
             node_card.pack(fill=tk.X, padx=20, pady=(0, 15))
             
@@ -1083,7 +994,6 @@ class VILCoinGUI:
                 fg=self.colors['text'],
                 font=('Consolas', 12, 'bold')).pack(anchor='w', pady=(5, 0))
             
-            # Peers card
             peers_card = self.create_card(dialog)
             peers_card.pack(fill=tk.BOTH, expand=True, padx=20, pady=(0, 20))
             
@@ -1104,7 +1014,6 @@ class VILCoinGUI:
                 padx=8,
                 pady=3).pack(side=tk.RIGHT)
             
-            # Peers list
             if self.blockchain.peers:
                 peers_list = tk.Frame(peers_card, bg=self.colors['bg_medium'])
                 peers_list.pack(fill=tk.BOTH, expand=True, padx=20, pady=(0, 15))
@@ -1200,7 +1109,6 @@ class VILCoinGUI:
         dialog.geometry("400x400")
         dialog.configure(bg=self.colors['bg_dark'])
         
-        # Title
         tk.Label(dialog,
             text="➕",
             bg=self.colors['bg_dark'],
@@ -1213,7 +1121,6 @@ class VILCoinGUI:
             fg=self.colors['text'],
             font=('Segoe UI', 14, 'bold')).pack()
         
-        # Form
         form_card = self.create_card(dialog)
         form_card.pack(pady=20, padx=30, fill=tk.BOTH, expand=True)
         
